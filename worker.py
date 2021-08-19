@@ -15,6 +15,7 @@ print(' [*] Waiting for messages. To exit press CTRL+C')
 
 
 def callback(ch, method, properties, body):
+    # Get id of worker to see the differences
     print("worker: ", os.getpid())
     print("body: ", body)
     body = body.decode("utf-8") 
@@ -22,8 +23,12 @@ def callback(ch, method, properties, body):
     uploaded_file = data[1]
     uploaded_time = data[0]
     print(" [x] Received {}".format(uploaded_file))
+    
+    # Supposely, model was predicting at this time.  
     delay = random.randint(1,10)
-    time.sleep(0.5) 
+    time.sleep(delay)
+    
+    # Set answer of predicts to redis
     ans = random.choice(["north", "central", "south"])
     red.set(uploaded_time, str(ans))    
     print(f"upload time: {uploaded_time} - label: {ans}")

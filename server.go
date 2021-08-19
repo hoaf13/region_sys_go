@@ -51,9 +51,9 @@ func main() {
 		uploaded_file, _ := c.FormFile("uploaded_file")
 		c.SaveUploadedFile(uploaded_file, "upload/"+uploaded_file.Filename)
 		uploaded_time := time.Now()
-
 		body := uploaded_time.String() + "|" + uploaded_file.Filename
 
+		// RabbitMQ Connection
 		conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 		failOnError(err, "Failed to connect to RabbitMQ")
 		defer conn.Close()
@@ -71,7 +71,6 @@ func main() {
 			nil,          // arguments
 		)
 		failOnError(err, "Failed to declare a queue")
-
 		err = ch.Publish(
 			"",     // exchange
 			q.Name, // routing key
@@ -83,25 +82,24 @@ func main() {
 			})
 		failOnError(err, "Failed to publish a message")
 
-		// redis settup
+		// Redis Connection
 		rdb := redis.NewClient(&redis.Options{
 			Addr:     "localhost:6379",
 			Password: "", // no password set
 			DB:       0,  // use default DB
 		})
-
 		fmt.Print(uploaded_time.String())
 		err = rdb.Set(ctx, uploaded_time.String(), "False", 0).Err()
 		if err != nil {
 			panic(err)
 		}
 
+		// Get answer from redis
 		for {
 			val, err := rdb.Get(ctx, uploaded_time.String()).Result()
 			if err != nil {
 				panic(err)
 			}
-
 			if val != "False" {
 				fmt.Print("Label: ", val)
 				break
