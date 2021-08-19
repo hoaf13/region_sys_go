@@ -1,4 +1,4 @@
-# Region Classification 
+# DEMO Region Classification System in Golang
 
 ---
 - Run server: go run server.go 
